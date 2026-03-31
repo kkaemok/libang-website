@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>L.B ONLINE | 서버 네트워크</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+  <style>
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@1.3.9/dist/web/pretendard.css');
+
+    :root {
+      --accent: #2fe0d0;
+      --accent-strong: #1bb7aa;
+      --accent-blue: #66c7ff;
+      --gold: #f2d38a;
+      --bg: #0a0f14;
+      --bg-2: #0c141b;
+      --card: rgba(15, 22, 30, 0.72);
+      --card-solid: #101a24;
+      --border: rgba(90, 224, 214, 0.18);
+      --text: #eef4f7;
+      --text-muted: #a9b6bf;
+      --shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+      --radius: 20px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: "Pretendard", "Noto Sans KR", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    .bg-animate {
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(800px 500px at 10% 15%, rgba(47, 224, 208, 0.12), transparent 60%),
+        radial-gradient(700px 500px at 85% 10%, rgba(102, 199, 255, 0.12), transparent 60%),
+        radial-gradient(900px 650px at 50% 85%, rgba(15, 120, 110, 0.25), transparent 65%),
+        linear-gradient(180deg, #090d12 0%, #0b131b 60%, #070b0f 100%);
+      z-index: -1;
+    }
+
+    /* 메뉴 버튼 */
+    .menu-btn {
+      position: fixed;
+      top: 18px;
+      left: 18px;
+      width: 44px; height: 44px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(12, 18, 26, 0.65);
+      color: var(--text);
+      display: grid; place-items: center;
+      cursor: pointer;
+      z-index: 1001;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .admin-btn {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      height: 44px;
+      padding: 0 14px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(12, 18, 26, 0.65);
+      color: var(--text);
+      font-weight: 600;
+      cursor: pointer;
+      z-index: 1001;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    body:not(.admin-on) .admin-only { display: none !important; }
+    body:not(.admin-on) .editable { cursor: default; }
+
+    /* 사이드바 */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: -280px;
+      width: 280px;
+      height: 100%;
+      padding: 90px 22px 20px;
+      background: rgba(10, 16, 22, 0.85);
+      border-right: 1px solid var(--border);
+      transition: 0.3s ease;
+      z-index: 1000;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+    .sidebar.active { left: 0; }
+    .sidebar h3 { margin-bottom: 20px; letter-spacing: 0.5px; }
+    .sidebar ul { list-style: none; display: grid; gap: 10px; }
+    .sidebar a {
+      text-decoration: none;
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid transparent;
+      transition: 0.2s;
+    }
+    .sidebar a:hover { border-color: var(--border); color: var(--accent); }
+
+    .sidebar-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0, 0, 0, 0.35);
+      opacity: 0; pointer-events: none;
+      transition: 0.2s;
+      z-index: 900;
+    }
+    .sidebar-overlay.active { opacity: 1; pointer-events: auto; }
+
+    header {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 40px 20px 20px;
+      animation: fadeIn 1.2s ease-out;
+    }
+
+    .hero-title {
+      font-size: clamp(2.8rem, 8vw, 5.8rem);
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: -1px;
+      background: linear-gradient(180deg, #f5feff 0%, #7cf5ea 45%, #7bb4ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+
+    .hero-subtitle {
+      font-size: 1.4rem;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 24px;
+      text-shadow: 0 0 18px rgba(47, 224, 208, 0.35);
+    }
+
+    .hero-desc {
+      max-width: 640px;
+      color: var(--text-muted);
+      font-size: 1.02rem;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 16px;
+      margin-top: 44px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .btn {
+      padding: 14px 30px;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1.05rem;
+      transition: 0.25s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+    .btn:hover { transform: translateY(-3px); filter: brightness(1.05); }
+    .btn-kakao { background: #fee500; color: #3c1e1e; }
+    .btn-discord { background: #5865f2; color: #fff; }
+
+    .container { max-width: 1040px; margin: 0 auto; padding: 0 20px 100px; }
+
+    .section-title {
+      font-size: 1.4rem;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 22px;
+      margin-bottom: 90px;
+    }
+
+    .card {
+      background: var(--card);
+      padding: 28px;
+      border-radius: var(--radius);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      transition: 0.25s;
+      text-align: center;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+    .card:hover {
+      border-color: var(--border);
+      transform: translateY(-6px);
+      background: rgba(18, 28, 38, 0.78);
+    }
+    .card i {
+      font-size: 2.4rem;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+    .card h3 { margin-bottom: 8px; font-size: 1.2rem; }
+    .card p { font-size: 0.95rem; color: var(--text-muted); }
+
+    /* 서버 목록 */
+    .server-section { margin-bottom: 80px; }
+    .server-item {
+      background: var(--card);
+      padding: 18px 20px;
+      border-radius: 14px;
+      margin-bottom: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      transition: 0.25s;
+      cursor: pointer;
+      backdrop-filter: blur(12px);
+    }
+    .server-item:hover {
+      transform: translateY(-4px);
+      border-color: var(--border);
+      background: rgba(18, 28, 38, 0.82);
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+    }
+    .server-item p { color: var(--text-muted); margin-top: 4px; }
+
+    /* 패치노트 */
+    .update-section {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 24px;
+      padding: 36px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(14px);
+    }
+    .update-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .update-list { display: flex; flex-direction: column; gap: 18px; }
+    .update-item {
+      display: flex;
+      gap: 18px;
+      padding: 14px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 12px;
+      transition: 0.2s;
+    }
+    .update-item:hover { background: rgba(255, 255, 255, 0.04); }
+    .date { font-weight: 600; color: #7f8c98; min-width: 90px; font-size: 0.9rem; }
+
+    .badge {
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-size: 0.74rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin-right: 8px;
+    }
+    .bg-urgent { background: var(--accent); color: #0b2a29; }
+    .bg-patch { background: #3a3f46; color: #fff; }
+    .bg-new { background: var(--accent-blue); color: #0b1c2a; }
+
+    footer {
+      text-align: center;
+      padding-bottom: 50px;
+      opacity: 0.5;
+      font-size: 0.85rem;
+    }
+
+    /* 즉시 편집 UI */
+    .edit-toolbar { display: flex; gap: 8px; margin: 8px 0 16px; flex-wrap: wrap; align-items: center; }
+    .mini-btn {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .mini-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .mini-btn.ghost { background: transparent; }
+    .edit-hint { color: #7c8a94; font-size: 0.85rem; margin-top: 6px; }
+    .status {
+      font-size: 0.82rem;
+      color: #7c8a94;
+      margin-left: auto;
+    }
+    .status.ok { color: #8be5d8; }
+    .status.warn { color: #f2d38a; }
+    .status.err { color: #ffb3b3; }
+
+    .editable { outline: none; border-bottom: 1px dashed transparent; }
+    .editable:focus {
+      border-color: var(--accent);
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 6px;
+    }
+    .single-line { white-space: nowrap; }
+
+    .remove-btn {
+      margin-left: auto;
+      background: rgba(47, 224, 208, 0.12);
+      border: 1px solid rgba(47, 224, 208, 0.35);
+      color: #b8fff7;
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+    .server-top { display: flex; align-items: center; gap: 10px; }
+    .patch-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px);} to { opacity: 1; transform: translateY(0);} }
+    .floating { animation: floating 3s ease-in-out infinite; }
+    @keyframes floating { 0%,100% { transform: translateY(0);} 50% { transform: translateY(-12px);} }
+
+    @media (max-width: 768px) {
+      .update-item { flex-direction: column; gap: 6px; }
+      .hero-subtitle { font-size: 1.1rem; }
+      .status { width: 100%; margin-left: 0; }
+    }
+  </style>
+</head>
+<body>
+  <button class="menu-btn" onclick="toggleMenu()" aria-label="메뉴 열기">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+  <button class="admin-btn" onclick="toggleAdmin()" id="adminBtn" type="button">관리자 로그인</button>
+
+  <div class="sidebar" id="sidebar">
+    <h3>메뉴</h3>
+    <ul>
+      <li><a href="#home">홈</a></li>
+      <li><a href="#servers">서버 목록</a></li>
+      <li><a href="#patch">패치노트</a></li>
+    </ul>
+  </div>
+  <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleMenu()"></div>
+
+  <div class="bg-animate"></div>
+
+  <header id="home">
+    <div class="floating">
+      <h1 class="hero-title">L.B ONLINE</h1>
+    </div>
+    <p class="hero-subtitle">"다양한 서버를 한 곳에서"</p>
+    <p class="hero-desc">여러 서버를 하나의 네트워크로 관리 ⚔️<br />원하는 서버를 자유롭게 선택하세요</p>
+
+    <div class="btn-group">
+      <a href="https://open.kakao.com/o/pjDFZMgi" class="btn btn-kakao" target="_blank"><i class="fa-solid fa-comment"></i> 오픈채팅방</a>
+      <a href="https://discord.gg/yQsTjAJBne" class="btn btn-discord" target="_blank"><i class="fa-brands fa-discord"></i> 공식 디스코드</a>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="server-section" id="servers">
+      <h2 class="section-title">소속 서버 목록</h2>
+      <div class="edit-toolbar admin-only">
+        <button class="mini-btn" type="button" onclick="addServer()">+ 서버 추가</button>
+        <button class="mini-btn ghost" type="button" onclick="resetServers()">초기화</button>
+        <span class="status" id="serverStatus"></span>
+      </div>
+      <div id="serverList"></div>
+      <div class="edit-hint" id="editHint">관리자 로그인 시 편집 가능합니다.</div>
+    </div>
+
+    <div class="grid">
+      <div class="card"><i class="fa-solid fa-khanda"></i><h3>약탈 & 전투</h3><p>모든 구역 무법지대!<br />뺏고 뺏기는 극한의 긴장감</p></div>
+      <div class="card"><i class="fa-solid fa-shop"></i><h3>유저 경제</h3><p>/유저상점 시스템으로<br />서버 최고의 부자가 되세요</p></div>
+      <div class="card"><i class="fa-solid fa-gift"></i><h3>공용 기부함</h3><p>버려진 템이 전설로!<br />실시간 동기화 시스템</p></div>
+      <div class="card"><i class="fa-solid fa-heart-pulse"></i><h3>복구 지원</h3><p>16시간마다 기본템 보급!<br />언제든 다시 일어서세요</p></div>
+    </div>
+
+    <div class="update-section" id="patch">
+      <div class="update-header">
+        <i class="fa-solid fa-bullhorn" style="color: var(--gold); font-size:1.5rem;"></i>
+        <h2 style="font-size:1.5rem;letter-spacing:1px;">PATCH NOTES</h2>
+      </div>
+      <div class="edit-toolbar admin-only">
+        <button class="mini-btn" type="button" onclick="addPatch()">+ 패치 추가</button>
+        <button class="mini-btn ghost" type="button" onclick="resetPatchNotes()">초기화</button>
+        <span class="status" id="patchStatus"></span>
+      </div>
+      <div class="update-list" id="updateList"></div>
+    </div>
+  </div>
+
+  <footer>
+    <p>L.B ONLINE © 2026</p>
+  </footer>
+
+  <script>
+    function toggleMenu(){
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      sidebar.classList.toggle('active');
+      overlay.classList.toggle('active');
+    }
+
+    /* 기본값 (API 실패 시 fallback) */
+    const defaultServers = [
+      {name:"능력야생", desc:"능력으로 야생에서 살아남으세요!"},
+      {name:"국가전쟁", desc:"전장에서 신상을 점령하세요!"},
+      {name:"플럼SMP", desc:"전투 중심"},
+      {name:"동원서버", desc:"RPG서버를 즐기세요!"}
+    ];
+
+    const defaultPatchNotes = [
+      {date:"2026-03-09", type:"URGENT", title:"수표 돈 복사 버그 수정", desc:"수표 생성 시 발생하던 데이터 오류를 수정하고 관련 로그를 전수 조사 완료했습니다."},
+      {date:"2026-03-08", type:"PATCH", title:"사소한 버그 및 서버 최적화", desc:"접속 시 간헐적으로 발생하던 튕김 현상과 맵 로딩 속도를 개선했습니다."},
+      {date:"2026-03-05", type:"NEW", title:"셋홈(Sethome) 한도 확장", desc:"기존 3개에서 최대 5개까지 위치 저장이 가능하도록 업데이트되었습니다."},
+      {date:"2026-03-22", type:"NEW", title:"셋홈(Sethome) 한도 확장", desc:"기존 3개에서 최대 5개까지 위치 저장이 가능하도록 업데이트되었습니다."}
+    ];
+
+    const ADMIN_KEY_STORAGE = "lb_admin_key";
+    let adminKey = localStorage.getItem(ADMIN_KEY_STORAGE) || "";
+    let isAdmin = false;
+
+    function setAdmin(state) {
+      isAdmin = state;
+      document.body.classList.toggle('admin-on', isAdmin);
+      const btn = document.getElementById('adminBtn');
+      if (btn) btn.textContent = isAdmin ? "관리자 로그아웃" : "관리자 로그인";
+      const hint = document.getElementById('editHint');
+      if (hint) hint.textContent = isAdmin ? "텍스트를 클릭해서 바로 수정할 수 있어요." : "관리자 로그인 시 편집 가능합니다.";
+      applyEditState();
+    }
+
+    async function verifyAdminKey(key) {
+      try {
+        const res = await fetch("/api/auth", {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${key}` }
+        });
+        return res.ok;
+      } catch {
+        return false;
+      }
+    }
+
+    async function toggleAdmin() {
+      if (isAdmin) {
+        localStorage.removeItem(ADMIN_KEY_STORAGE);
+        adminKey = "";
+        setAdmin(false);
+        return;
+      }
+      const key = prompt("관리자 키를 입력하세요");
+      if (!key) return;
+      const ok = await verifyAdminKey(key);
+      if (!ok) {
+        alert("키가 올바르지 않습니다.");
+        return;
+      }
+      adminKey = key;
+      localStorage.setItem(ADMIN_KEY_STORAGE, key);
+      setAdmin(true);
+    }
+
+    function escapeHtml(str) {
+      const map = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};
+      return String(str).replace(/[&<>"']/g, s => map[s]);
+    }
+    function getBadgeClass(type) {
+      const t = String(type).toUpperCase();
+      if (t === "URGENT") return "bg-urgent";
+      if (t === "NEW") return "bg-new";
+      return "bg-patch";
+    }
+    function getLocalDateString() {
+      const d = new Date();
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+
+    let servers = [];
+    let patchNotes = [];
+
+    const serverList = document.getElementById('serverList');
+    const patchContainer = document.getElementById('updateList');
+    const serverStatus = document.getElementById('serverStatus');
+    const patchStatus = document.getElementById('patchStatus');
+    const saveTimers = { servers: null, patch: null };
+
+    function setStatus(el, msg, type) {
+      if (!el) return;
+      el.textContent = msg || "";
+      el.classList.remove("ok", "warn", "err");
+      if (type) el.classList.add(type);
+    }
+
+    async function fetchJson(url, fallback) {
+      try {
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) throw new Error("bad");
+        const data = await res.json();
+        if (!Array.isArray(data)) throw new Error("bad");
+        return data;
+      } catch {
+        return fallback;
+      }
+    }
+
+    async function initData() {
+      servers = await fetchJson("/api/servers", defaultServers.slice());
+      patchNotes = await fetchJson("/api/patch", defaultPatchNotes.slice());
+      renderServers();
+      renderPatchNotes();
+      applyEditState();
+    }
+
+    function renderServers(){
+      serverList.innerHTML = servers.map((s, i) => `
+        <div class="server-item">
+          <div class="server-top">
+            <strong class="editable single-line" contenteditable="true" data-type="server" data-idx="${i}" data-field="name">${escapeHtml(s.name)}</strong>
+            <button class="remove-btn admin-only" data-type="server" data-idx="${i}">삭제</button>
+          </div>
+          <p class="editable" contenteditable="true" data-type="server" data-idx="${i}" data-field="desc">${escapeHtml(s.desc)}</p>
+        </div>
+      `).join('');
+    }
+
+    function renderPatchNotes(){
+      patchContainer.innerHTML = patchNotes.map((item, i) => `
+        <div class="update-item">
+          <div class="date editable single-line" contenteditable="true" data-type="patch" data-idx="${i}" data-field="date">${escapeHtml(item.date)}</div>
+          <div style="flex:1;">
+            <div class="patch-top">
+              <span class="badge ${getBadgeClass(item.type)} editable single-line" contenteditable="true" data-type="patch" data-idx="${i}" data-field="type">${escapeHtml(item.type)}</span>
+              <strong class="editable single-line" contenteditable="true" data-type="patch" data-idx="${i}" data-field="title">${escapeHtml(item.title)}</strong>
+              <button class="remove-btn admin-only" data-type="patch" data-idx="${i}">삭제</button>
+            </div>
+            <p class="editable" contenteditable="true" data-type="patch" data-idx="${i}" data-field="desc" style="margin-top:5px;font-size:0.9rem;color:#aab6bf;">${escapeHtml(item.desc)}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function applyEditState() {
+      document.querySelectorAll('.editable').forEach(el => {
+        el.contentEditable = isAdmin ? "true" : "false";
+      });
+    }
+
+    async function saveServers() {
+      if (!isAdmin) return;
+      setStatus(serverStatus, "저장 중...", "warn");
+      try {
+        const res = await fetch("/api/servers", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "Authorization": `Bearer ${adminKey}`
+          },
+          body: JSON.stringify(servers)
+        });
+        if (!res.ok) throw new Error("save");
+        setStatus(serverStatus, "저장됨", "ok");
+      } catch {
+        setStatus(serverStatus, "저장 실패", "err");
+      }
+    }
+
+    async function savePatchNotes() {
+      if (!isAdmin) return;
+      setStatus(patchStatus, "저장 중...", "warn");
+      try {
+        const res = await fetch("/api/patch", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "Authorization": `Bearer ${adminKey}`
+          },
+          body: JSON.stringify(patchNotes)
+        });
+        if (!res.ok) throw new Error("save");
+        setStatus(patchStatus, "저장됨", "ok");
+      } catch {
+        setStatus(patchStatus, "저장 실패", "err");
+      }
+    }
+
+    function scheduleSave(kind) {
+      if (!isAdmin) return;
+      clearTimeout(saveTimers[kind]);
+      saveTimers[kind] = setTimeout(() => {
+        if (kind === "servers") saveServers();
+        if (kind === "patch") savePatchNotes();
+      }, 800);
+    }
+
+    document.addEventListener('input', (e) => {
+      const el = e.target;
+      if (!el.classList.contains('editable')) return;
+      if (!isAdmin) return;
+      const type = el.dataset.type;
+      const idx = Number(el.dataset.idx);
+      const field = el.dataset.field;
+      const value = el.textContent.trim();
+
+      if (type === "server") {
+        servers[idx][field] = value;
+        scheduleSave("servers");
+      } else if (type === "patch") {
+        patchNotes[idx][field] = value;
+        if (field === "type") {
+          el.classList.remove("bg-urgent", "bg-new", "bg-patch");
+          el.classList.add(getBadgeClass(value));
+        }
+        scheduleSave("patch");
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.classList.contains('remove-btn')) return;
+      if (!isAdmin) return;
+      const type = e.target.dataset.type;
+      const idx = Number(e.target.dataset.idx);
+      if (type === "server") {
+        servers.splice(idx, 1);
+        renderServers();
+        applyEditState();
+        saveServers();
+      } else {
+        patchNotes.splice(idx, 1);
+        renderPatchNotes();
+        applyEditState();
+        savePatchNotes();
+      }
+    });
+
+    function addServer(){
+      if (!isAdmin) { alert("관리자만 수정할 수 있습니다."); return; }
+      servers.push({name:"새 서버", desc:"설명 입력"});
+      renderServers();
+      applyEditState();
+      saveServers();
+    }
+    function resetServers(){
+      if (!isAdmin) { alert("관리자만 수정할 수 있습니다."); return; }
+      servers = defaultServers.slice();
+      renderServers();
+      applyEditState();
+      saveServers();
+    }
+
+    function addPatch(){
+      if (!isAdmin) { alert("관리자만 수정할 수 있습니다."); return; }
+      const today = getLocalDateString();
+      patchNotes.unshift({date: today, type:"PATCH", title:"제목 입력", desc:"설명 입력"});
+      renderPatchNotes();
+      applyEditState();
+      savePatchNotes();
+    }
+    function resetPatchNotes(){
+      if (!isAdmin) { alert("관리자만 수정할 수 있습니다."); return; }
+      patchNotes = defaultPatchNotes.slice();
+      renderPatchNotes();
+      applyEditState();
+      savePatchNotes();
+    }
+
+    async function initAdminFromStorage() {
+      if (!adminKey) { setAdmin(false); return; }
+      const ok = await verifyAdminKey(adminKey);
+      if (!ok) {
+        localStorage.removeItem(ADMIN_KEY_STORAGE);
+        adminKey = "";
+        setAdmin(false);
+        return;
+      }
+      setAdmin(true);
+    }
+
+    initData();
+    initAdminFromStorage();
+  </script>
+</body>
+</html>
