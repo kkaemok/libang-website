@@ -82,11 +82,13 @@
       font-weight: 700;
       letter-spacing: 0.2px;
     }
-    .brand-badge {
-      width: 28px; height: 28px;
-      border-radius: 10px;
-      background: radial-gradient(circle at 30% 30%, #5af3e4, #1f8e86);
-      box-shadow: 0 0 20px rgba(47, 214, 201, 0.35);
+    .brand-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      object-fit: cover;
+      image-rendering: pixelated;
+      box-shadow: 0 0 16px rgba(47, 214, 201, 0.25);
     }
     .nav-links {
       display: flex;
@@ -100,7 +102,7 @@
       color: inherit;
       transition: 0.2s;
     }
-    .nav-links a:hover { color: var(--accent); }
+    .nav-links a:hover { color: var(--text); }
     .nav-links a.active { color: var(--accent); }
 
     .nav-right {
@@ -111,23 +113,27 @@
     .nav-icons {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
     .icon-btn {
-      width: 34px;
-      height: 34px;
-      display: grid;
-      place-items: center;
-      border-radius: 10px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(255, 255, 255, 0.02);
-      color: var(--text);
+      width: 30px;
+      height: 30px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
       cursor: pointer;
       transition: 0.2s;
       text-decoration: none;
+      padding: 0;
     }
-    .icon-btn:hover { color: var(--accent); border-color: rgba(47, 214, 201, 0.35); }
-    .icon-btn.is-admin { color: var(--accent); border-color: rgba(47, 214, 201, 0.45); }
+    .icon-btn:hover { color: var(--text); }
+    .icon-btn.is-admin { color: var(--accent); }
+    .lang-btn { width: auto; }
+    .lang-btn i:last-child { font-size: 0.7rem; opacity: 0.7; }
     .divider {
       width: 1px;
       height: 18px;
@@ -178,6 +184,21 @@
       gap: 14px;
       margin-top: 26px;
       flex-wrap: wrap;
+      position: relative;
+    }
+    .cta-highlight {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 0;
+      border-radius: 999px;
+      background: rgba(47, 214, 201, 0.12);
+      border: 1px solid rgba(47, 214, 201, 0.4);
+      opacity: 0;
+      transition: transform 0.25s ease, width 0.25s ease, height 0.25s ease, opacity 0.2s;
+      pointer-events: none;
+      z-index: 0;
     }
     .btn {
       padding: 12px 22px;
@@ -191,6 +212,8 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
+      position: relative;
+      z-index: 1;
     }
     .btn.primary {
       background: linear-gradient(135deg, #2fd6c9, #34a9ff);
@@ -205,34 +228,11 @@
       place-items: center;
       position: relative;
     }
-    .orb {
-      width: min(360px, 70vw);
-      aspect-ratio: 1;
-      border-radius: 50%;
-      background:
-        radial-gradient(circle at 30% 30%, rgba(122, 255, 232, 0.9), rgba(47, 214, 201, 0.35) 45%, rgba(12, 22, 28, 0.9) 75%),
-        radial-gradient(circle at 70% 60%, rgba(58, 165, 255, 0.35), transparent 60%);
-      box-shadow: 0 0 60px rgba(47, 214, 201, 0.25);
-      position: relative;
-    }
-    .orb::before {
-      content: "";
-      position: absolute;
-      inset: 18% 20%;
-      border-radius: 50%;
-      background: linear-gradient(160deg, rgba(22, 255, 218, 0.95), rgba(19, 60, 70, 0.35));
-      filter: blur(0.2px);
-    }
-    .orb::after {
-      content: "";
-      position: absolute;
-      width: 56%;
-      height: 56%;
-      right: 18%;
-      bottom: 12%;
-      border-radius: 40% 60% 50% 50%;
-      background: linear-gradient(140deg, rgba(12, 18, 24, 0.1), rgba(4, 12, 14, 0.75));
-      border: 1px solid rgba(255, 255, 255, 0.06);
+    .hero-logo {
+      width: min(320px, 70vw);
+      height: auto;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.45));
     }
     .hero-glow {
       position: absolute;
@@ -437,19 +437,19 @@
   <nav class="nav">
     <div class="container nav-inner">
       <div class="brand">
-        <div class="brand-badge"></div>
+        <img class="brand-icon" src="assets/libang-icon.png" alt="L.B 아이콘" />
         L.B ONLINE
       </div>
       <div class="nav-right">
         <div class="nav-links" id="navLinks">
           <a href="#home" class="active">Home</a>
-          <a href="#servers">Servers</a>
-          <a href="#patch">Patch</a>
-          <a href="#team">Team</a>
+          <a href="#servers">Download</a>
+          <a href="#patch">Docs</a>
         </div>
         <div class="nav-icons">
-          <button class="icon-btn" type="button" aria-label="언어 선택">
+          <button class="icon-btn lang-btn" type="button" aria-label="언어 선택">
             <i class="fa-solid fa-language"></i>
+            <i class="fa-solid fa-chevron-down"></i>
           </button>
           <div class="divider"></div>
           <a class="icon-btn" href="https://github.com/" target="_blank" aria-label="GitHub">
@@ -475,15 +475,16 @@
         <span class="pill"><i class="fa-solid fa-sparkles"></i> L.B NETWORK</span>
         <h1><span>L.B ONLINE</span>의 서버 네트워크를 한 곳에</h1>
         <p>리뱅 온라인은 서로 다른 서버를 연결해 하나의 경험으로 제공합니다. 전투, 경제, RPG까지 원하는 모드를 자유롭게 즐겨보세요.</p>
-        <div class="hero-cta">
-          <a class="btn primary" href="https://open.kakao.com/o/pjDFZMgi" target="_blank"><i class="fa-solid fa-comment"></i> 오픈채팅</a>
-          <a class="btn" href="https://discord.gg/yQsTjAJBne" target="_blank"><i class="fa-brands fa-discord"></i> 디스코드</a>
-          <a class="btn" href="#servers"><i class="fa-solid fa-server"></i> 서버 목록</a>
+        <div class="hero-cta" id="heroCta">
+          <span class="cta-highlight" id="ctaHighlight" aria-hidden="true"></span>
+          <a class="btn primary cta-btn" href="https://open.kakao.com/o/pjDFZMgi" target="_blank"><i class="fa-solid fa-comment"></i> 오픈채팅</a>
+          <a class="btn cta-btn" href="https://discord.gg/yQsTjAJBne" target="_blank"><i class="fa-brands fa-discord"></i> 디스코드</a>
+          <a class="btn cta-btn" href="#servers"><i class="fa-solid fa-server"></i> 서버 목록</a>
         </div>
       </div>
       <div class="hero-art">
         <div class="hero-glow"></div>
-        <div class="orb" aria-hidden="true"></div>
+        <img class="hero-logo" src="assets/libang-icon.png" alt="L.B ONLINE 아이콘" />
       </div>
     </section>
 
@@ -851,6 +852,32 @@
         return;
       }
       setAdmin(true);
+    }
+
+    const heroCta = document.getElementById("heroCta");
+    const ctaHighlight = document.getElementById("ctaHighlight");
+    if (heroCta && ctaHighlight) {
+      const moveHighlight = (btn) => {
+        const rect = btn.getBoundingClientRect();
+        const parentRect = heroCta.getBoundingClientRect();
+        ctaHighlight.style.width = `${rect.width}px`;
+        ctaHighlight.style.height = `${rect.height}px`;
+        ctaHighlight.style.transform = `translate(${rect.left - parentRect.left}px, ${rect.top - parentRect.top}px)`;
+        ctaHighlight.style.opacity = "1";
+      };
+      heroCta.querySelectorAll(".cta-btn").forEach((btn) => {
+        btn.addEventListener("mouseenter", () => moveHighlight(btn));
+        btn.addEventListener("focus", () => moveHighlight(btn));
+      });
+      heroCta.addEventListener("mouseleave", () => {
+        ctaHighlight.style.opacity = "0";
+      });
+      heroCta.addEventListener("focusout", (e) => {
+        if (!heroCta.contains(e.relatedTarget)) ctaHighlight.style.opacity = "0";
+      });
+      window.addEventListener("resize", () => {
+        ctaHighlight.style.opacity = "0";
+      });
     }
 
     initData();
