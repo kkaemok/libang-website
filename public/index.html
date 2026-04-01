@@ -110,6 +110,11 @@
       align-items: center;
       gap: 18px;
     }
+    .edit-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
     .nav-icons {
       display: flex;
       align-items: center;
@@ -327,9 +332,16 @@
       padding: 18px;
       text-align: center;
     }
+    .team-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
     .avatar {
       width: 64px; height: 64px;
-      margin: 0 auto 10px;
+      margin: 0 auto;
       border-radius: 50%;
       background: radial-gradient(circle at 30% 30%, #7fffe8, #2c7f79);
       display: grid;
@@ -425,9 +437,14 @@
       </div>
       <div class="nav-right">
         <div class="nav-links" id="navLinks">
-          <a href="#home" class="active editable single-line" data-copy-key="nav-home">Home</a>
-          <a href="#servers" class="editable single-line" data-copy-key="nav-servers">Servers</a>
-          <a href="#patch" class="editable single-line" data-copy-key="nav-patches">Patches</a>
+          <a href="#home" class="active"><span class="editable single-line" data-copy-key="nav-home">Home</span></a>
+          <a href="#servers"><span class="editable single-line" data-copy-key="nav-servers">Servers</span></a>
+          <a href="#patch"><span class="editable single-line" data-copy-key="nav-patches">Patches</span></a>
+        </div>
+        <div class="edit-actions admin-only">
+          <button class="mini-btn" type="button" onclick="commitEdits()">편집 완료</button>
+          <button class="mini-btn ghost" type="button" onclick="cancelEdits()">취소</button>
+          <span class="status" id="editStatus"></span>
         </div>
         <div class="nav-icons">
           <button class="icon-btn lang-btn" type="button" aria-label="언어 선택">
@@ -540,29 +557,13 @@
           <h2 class="editable single-line" data-copy-key="team-title">운영진</h2>
           <p class="editable" data-copy-key="team-desc">리뱅 온라인을 운영하는 핵심 팀.</p>
         </div>
-      </div>
-      <div class="team-grid">
-        <div class="team-card">
-          <div class="avatar">LB</div>
-          <strong class="editable single-line" data-copy-key="team-1-name">리뱅총괄</strong>
-          <p class="editable single-line" data-copy-key="team-1-role">Network Lead</p>
-        </div>
-        <div class="team-card">
-          <div class="avatar">GM</div>
-          <strong class="editable single-line" data-copy-key="team-2-name">운영팀</strong>
-          <p class="editable single-line" data-copy-key="team-2-role">Community Manager</p>
-        </div>
-        <div class="team-card">
-          <div class="avatar">DEV</div>
-          <strong class="editable single-line" data-copy-key="team-3-name">개발팀</strong>
-          <p class="editable single-line" data-copy-key="team-3-role">Core Developer</p>
-        </div>
-        <div class="team-card">
-          <div class="avatar">MOD</div>
-          <strong class="editable single-line" data-copy-key="team-4-name">중재팀</strong>
-          <p class="editable single-line" data-copy-key="team-4-role">Support & Moderation</p>
+        <div class="edit-toolbar admin-only">
+          <button class="mini-btn" type="button" onclick="addTeam()">+ 운영진 추가</button>
+          <button class="mini-btn ghost" type="button" onclick="resetTeam()">초기화</button>
+          <span class="status" id="teamStatus"></span>
         </div>
       </div>
+      <div class="team-grid" id="teamList"></div>
     </section>
   </main>
 
@@ -590,9 +591,17 @@
       {date:"2026-03-22", type:"NEW", title:"셋홈(Sethome) 한도 확장", desc:"기존 3개에서 최대 5개까지 위치 저장이 가능하도록 업데이트되었습니다."}
     ];
 
+    const defaultTeam = [
+      {initials: "LB", name: "리뱅총괄", role: "Network Lead"},
+      {initials: "GM", name: "운영팀", role: "Community Manager"},
+      {initials: "DEV", name: "개발팀", role: "Core Developer"},
+      {initials: "MOD", name: "중재팀", role: "Support & Moderation"}
+    ];
+
     const ADMIN_KEY_STORAGE = "lb_admin_key";
     let adminKey = localStorage.getItem(ADMIN_KEY_STORAGE) || "";
     let isAdmin = false;
+    let snapshot = { siteCopy: {}, servers: [], patchNotes: [], team: [] };
 
     function setAdmin(state) {
       isAdmin = state;
@@ -620,6 +629,7 @@
 
     async function toggleAdmin() {
       if (isAdmin) {
+        cancelEdits(true);
         localStorage.removeItem(ADMIN_KEY_STORAGE);
         adminKey = "";
         setAdmin(false);
@@ -641,6 +651,9 @@
       const map = {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'};
       return String(str).replace(/[&<>"']/g, s => map[s]);
     }
+    function deepClone(data) {
+      return JSON.parse(JSON.stringify(data));
+    }
     function getBadgeClass(type) {
       const t = String(type).toUpperCase();
       if (t === "URGENT") return "bg-urgent";
@@ -658,12 +671,15 @@
     let siteCopy = {};
     let servers = [];
     let patchNotes = [];
+    let teamMembers = [];
 
     const serverList = document.getElementById('serverList');
     const patchContainer = document.getElementById('updateList');
+    const teamList = document.getElementById('teamList');
     const serverStatus = document.getElementById('serverStatus');
     const patchStatus = document.getElementById('patchStatus');
-    const saveTimers = { servers: null, patch: null, copy: null };
+    const teamStatus = document.getElementById('teamStatus');
+    const editStatus = document.getElementById('editStatus');
 
     function setStatus(el, msg, type) {
       if (!el) return;
@@ -705,16 +721,16 @@
       });
     }
 
-    async function initSiteCopy() {
+    async function initAll() {
       siteCopy = await fetchObject("/api/site", {});
-      applySiteCopy();
-    }
-
-    async function initData() {
       servers = await fetchJson("/api/servers", defaultServers.slice());
       patchNotes = await fetchJson("/api/patch", defaultPatchNotes.slice());
+      teamMembers = await fetchJson("/api/team", defaultTeam.slice());
+      applySiteCopy();
       renderServers();
       renderPatchNotes();
+      renderTeam();
+      takeSnapshot();
       applyEditState();
     }
 
@@ -746,15 +762,49 @@
       `).join('');
     }
 
+    function renderTeam() {
+      if (!teamList) return;
+      teamList.innerHTML = teamMembers.map((m, i) => `
+        <div class="team-card">
+          <div class="team-top">
+            <div class="avatar editable single-line" contenteditable="true" data-type="team" data-idx="${i}" data-field="initials">${escapeHtml(m.initials)}</div>
+            <button class="remove-btn admin-only" data-type="team" data-idx="${i}">삭제</button>
+          </div>
+          <strong class="editable single-line" contenteditable="true" data-type="team" data-idx="${i}" data-field="name">${escapeHtml(m.name)}</strong>
+          <p class="editable single-line" contenteditable="true" data-type="team" data-idx="${i}" data-field="role">${escapeHtml(m.role)}</p>
+        </div>
+      `).join('');
+    }
+
     function applyEditState() {
       document.querySelectorAll('.editable').forEach(el => {
         el.contentEditable = isAdmin ? "true" : "false";
       });
     }
 
+    function takeSnapshot() {
+      snapshot = {
+        siteCopy: deepClone(siteCopy || {}),
+        servers: deepClone(servers || []),
+        patchNotes: deepClone(patchNotes || []),
+        team: deepClone(teamMembers || [])
+      };
+    }
+
+    function restoreSnapshot() {
+      siteCopy = deepClone(snapshot.siteCopy || {});
+      servers = deepClone(snapshot.servers || []);
+      patchNotes = deepClone(snapshot.patchNotes || []);
+      teamMembers = deepClone(snapshot.team || []);
+      applySiteCopy();
+      renderServers();
+      renderPatchNotes();
+      renderTeam();
+      applyEditState();
+    }
+
     async function saveServers() {
       if (!isAdmin) return;
-      setStatus(serverStatus, "저장 중...", "warn");
       try {
         const res = await fetch("/api/servers", {
           method: "POST",
@@ -765,15 +815,13 @@
           body: JSON.stringify(servers)
         });
         if (!res.ok) throw new Error("save");
-        setStatus(serverStatus, "저장됨", "ok");
-      } catch {
-        setStatus(serverStatus, "저장 실패", "err");
+      } catch (err) {
+        throw err;
       }
     }
 
     async function savePatchNotes() {
       if (!isAdmin) return;
-      setStatus(patchStatus, "저장 중...", "warn");
       try {
         const res = await fetch("/api/patch", {
           method: "POST",
@@ -784,16 +832,32 @@
           body: JSON.stringify(patchNotes)
         });
         if (!res.ok) throw new Error("save");
-        setStatus(patchStatus, "저장됨", "ok");
-      } catch {
-        setStatus(patchStatus, "저장 실패", "err");
+      } catch (err) {
+        throw err;
+      }
+    }
+
+    async function saveTeam() {
+      if (!isAdmin) return;
+      try {
+        const res = await fetch("/api/team", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "Authorization": `Bearer ${adminKey}`
+          },
+          body: JSON.stringify(teamMembers)
+        });
+        if (!res.ok) throw new Error("save");
+      } catch (err) {
+        throw err;
       }
     }
 
     async function saveSiteCopy() {
       if (!isAdmin) return;
       try {
-        await fetch("/api/site", {
+        const res = await fetch("/api/site", {
           method: "POST",
           headers: {
             "content-type": "application/json",
@@ -801,17 +865,37 @@
           },
           body: JSON.stringify(siteCopy)
         });
-      } catch {}
+        if (!res.ok) throw new Error("save");
+      } catch (err) {
+        throw err;
+      }
     }
 
-    function scheduleSave(kind) {
+    async function commitEdits() {
       if (!isAdmin) return;
-      clearTimeout(saveTimers[kind]);
-      saveTimers[kind] = setTimeout(() => {
-        if (kind === "servers") saveServers();
-        if (kind === "patch") savePatchNotes();
-        if (kind === "copy") saveSiteCopy();
-      }, 800);
+      setStatus(editStatus, "저장 중...", "warn");
+      try {
+        await Promise.all([saveServers(), savePatchNotes(), saveTeam(), saveSiteCopy()]);
+        takeSnapshot();
+        setStatus(editStatus, "저장됨", "ok");
+        setStatus(serverStatus, "저장됨", "ok");
+        setStatus(patchStatus, "저장됨", "ok");
+        setStatus(teamStatus, "저장됨", "ok");
+      } catch {
+        setStatus(editStatus, "저장 실패", "err");
+        setStatus(serverStatus, "저장 실패", "err");
+        setStatus(patchStatus, "저장 실패", "err");
+        setStatus(teamStatus, "저장 실패", "err");
+      }
+    }
+
+    function cancelEdits(force = false) {
+      if (!isAdmin && !force) return;
+      restoreSnapshot();
+      setStatus(editStatus, "취소됨", "warn");
+      setStatus(serverStatus, "", "");
+      setStatus(patchStatus, "", "");
+      setStatus(teamStatus, "", "");
     }
 
     document.addEventListener('input', (e) => {
@@ -821,7 +905,6 @@
       const copyKey = el.dataset.copyKey;
       if (copyKey) {
         siteCopy[copyKey] = el.textContent.trim();
-        scheduleSave("copy");
         return;
       }
       const type = el.dataset.type;
@@ -831,14 +914,14 @@
 
       if (type === "server") {
         servers[idx][field] = value;
-        scheduleSave("servers");
       } else if (type === "patch") {
         patchNotes[idx][field] = value;
         if (field === "type") {
           el.classList.remove("bg-urgent", "bg-new", "bg-patch");
           el.classList.add(getBadgeClass(value));
         }
-        scheduleSave("patch");
+      } else if (type === "team") {
+        teamMembers[idx][field] = value;
       }
     });
 
@@ -851,12 +934,16 @@
         servers.splice(idx, 1);
         renderServers();
         applyEditState();
-        saveServers();
       } else {
-        patchNotes.splice(idx, 1);
-        renderPatchNotes();
-        applyEditState();
-        savePatchNotes();
+        if (type === "patch") {
+          patchNotes.splice(idx, 1);
+          renderPatchNotes();
+          applyEditState();
+        } else if (type === "team") {
+          teamMembers.splice(idx, 1);
+          renderTeam();
+          applyEditState();
+        }
       }
     });
 
@@ -865,14 +952,12 @@
       servers.push({name:"새 서버", desc:"설명 입력"});
       renderServers();
       applyEditState();
-      saveServers();
     }
     function resetServers(){
       if (!isAdmin) { alert("관리자만 수정할 수 있습니다."); return; }
       servers = defaultServers.slice();
       renderServers();
       applyEditState();
-      saveServers();
     }
 
     function addPatch(){
@@ -881,14 +966,25 @@
       patchNotes.unshift({date: today, type:"PATCH", title:"제목 입력", desc:"설명 입력"});
       renderPatchNotes();
       applyEditState();
-      savePatchNotes();
     }
     function resetPatchNotes(){
       if (!isAdmin) { alert("관리자만 수정할 수 있습니다."); return; }
       patchNotes = defaultPatchNotes.slice();
       renderPatchNotes();
       applyEditState();
-      savePatchNotes();
+    }
+
+    function addTeam(){
+      if (!isAdmin) { alert("관리자만 수정할 수 있습니다."); return; }
+      teamMembers.push({initials:"NEW", name:"새 운영진", role:"Role"});
+      renderTeam();
+      applyEditState();
+    }
+    function resetTeam(){
+      if (!isAdmin) { alert("관리자만 수정할 수 있습니다."); return; }
+      teamMembers = defaultTeam.slice();
+      renderTeam();
+      applyEditState();
     }
 
     async function initAdminFromStorage() {
@@ -903,8 +999,13 @@
       setAdmin(true);
     }
 
-    initSiteCopy();
-    initData();
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter") return;
+      if (!e.target.classList || !e.target.classList.contains("single-line")) return;
+      e.preventDefault();
+    });
+
+    initAll();
     initAdminFromStorage();
   </script>
 </body>
