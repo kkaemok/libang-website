@@ -144,8 +144,8 @@
       display: none;
       width: 40px; height: 40px;
       border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(255, 255, 255, 0.03);
+      border: none;
+      background: transparent;
       color: var(--text);
       cursor: pointer;
     }
@@ -173,7 +173,7 @@
       margin: 16px 0;
       letter-spacing: -0.5px;
     }
-    .hero h1 span { color: var(--accent); }
+    .hero h1 .accent { color: var(--accent); }
     .hero p {
       color: var(--muted);
       font-size: 1.05rem;
@@ -184,21 +184,6 @@
       gap: 14px;
       margin-top: 26px;
       flex-wrap: wrap;
-      position: relative;
-    }
-    .cta-highlight {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 0;
-      height: 0;
-      border-radius: 999px;
-      background: rgba(47, 214, 201, 0.12);
-      border: 1px solid rgba(47, 214, 201, 0.4);
-      opacity: 0;
-      transition: transform 0.25s ease, width 0.25s ease, height 0.25s ease, opacity 0.2s;
-      pointer-events: none;
-      z-index: 0;
     }
     .btn {
       padding: 12px 22px;
@@ -212,8 +197,6 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      position: relative;
-      z-index: 1;
     }
     .btn.primary {
       background: linear-gradient(135deg, #2fd6c9, #34a9ff);
@@ -438,13 +421,13 @@
     <div class="container nav-inner">
       <div class="brand">
         <img class="brand-icon" src="assets/libang-icon.png" alt="L.B 아이콘" />
-        L.B ONLINE
+        <span class="editable single-line" data-copy-key="brand">L.B ONLINE</span>
       </div>
       <div class="nav-right">
         <div class="nav-links" id="navLinks">
-          <a href="#home" class="active">Home</a>
-          <a href="#servers">Download</a>
-          <a href="#patch">Docs</a>
+          <a href="#home" class="active editable single-line" data-copy-key="nav-home">Home</a>
+          <a href="#servers" class="editable single-line" data-copy-key="nav-servers">Servers</a>
+          <a href="#patch" class="editable single-line" data-copy-key="nav-patches">Patches</a>
         </div>
         <div class="nav-icons">
           <button class="icon-btn lang-btn" type="button" aria-label="언어 선택">
@@ -472,14 +455,32 @@
   <main class="container">
     <section class="hero" id="home">
       <div>
-        <span class="pill"><i class="fa-solid fa-sparkles"></i> L.B NETWORK</span>
-        <h1><span>L.B ONLINE</span>의 서버 네트워크를 한 곳에</h1>
-        <p>리뱅 온라인은 서로 다른 서버를 연결해 하나의 경험으로 제공합니다. 전투, 경제, RPG까지 원하는 모드를 자유롭게 즐겨보세요.</p>
-        <div class="hero-cta" id="heroCta">
-          <span class="cta-highlight" id="ctaHighlight" aria-hidden="true"></span>
-          <a class="btn primary cta-btn" href="https://open.kakao.com/o/pjDFZMgi" target="_blank"><i class="fa-solid fa-comment"></i> 오픈채팅</a>
-          <a class="btn cta-btn" href="https://discord.gg/yQsTjAJBne" target="_blank"><i class="fa-brands fa-discord"></i> 디스코드</a>
-          <a class="btn cta-btn" href="#servers"><i class="fa-solid fa-server"></i> 서버 목록</a>
+        <span class="pill">
+          <i class="fa-solid fa-sparkles"></i>
+          <span class="editable single-line" data-copy-key="pill">L.B NETWORK</span>
+        </span>
+        <h1>
+          <span class="accent editable single-line" data-copy-key="hero-title-accent">L.B ONLINE</span>
+          <span class="editable" data-copy-key="hero-title-main">의 서버 네트워크를 한 곳에</span>
+        </h1>
+        <p class="editable" data-copy-key="hero-desc">리뱅 온라인은 서로 다른 서버를 연결해 하나의 경험으로 제공합니다. 전투, 경제, RPG까지 원하는 모드를 자유롭게 즐겨보세요.</p>
+        <div class="hero-cta">
+          <a class="btn primary" href="https://open.kakao.com/o/pjDFZMgi" target="_blank">
+            <i class="fa-solid fa-comment"></i>
+            <span class="editable single-line" data-copy-key="cta-chat">오픈채팅</span>
+          </a>
+          <a class="btn" href="https://discord.gg/yQsTjAJBne" target="_blank">
+            <i class="fa-brands fa-discord"></i>
+            <span class="editable single-line" data-copy-key="cta-discord">디스코드</span>
+          </a>
+          <a class="btn" href="#servers">
+            <i class="fa-solid fa-server"></i>
+            <span class="editable single-line" data-copy-key="cta-servers">서버 목록</span>
+          </a>
+          <a class="btn" href="#patch">
+            <i class="fa-solid fa-clipboard-list"></i>
+            <span class="editable single-line" data-copy-key="cta-patch">패치노트</span>
+          </a>
         </div>
       </div>
       <div class="hero-art">
@@ -490,24 +491,24 @@
 
     <section class="feature-grid">
       <div class="feature-card">
-        <div class="feature-title"><i class="fa-solid fa-bolt"></i> 고성능 전투</div>
-        <p>지연을 최소화한 전투 최적화로 대규모 전쟁에서도 안정적인 플레이를 제공합니다.</p>
+        <div class="feature-title"><i class="fa-solid fa-bolt"></i><span class="editable single-line" data-copy-key="feature-1-title">고성능 전투</span></div>
+        <p class="editable" data-copy-key="feature-1-desc">지연을 최소화한 전투 최적화로 대규모 전쟁에서도 안정적인 플레이를 제공합니다.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-title"><i class="fa-solid fa-shop"></i> 유저 경제</div>
-        <p>거래, 경매, 상점 시스템으로 서버 경제를 직접 움직이는 재미를 느낄 수 있어요.</p>
+        <div class="feature-title"><i class="fa-solid fa-shop"></i><span class="editable single-line" data-copy-key="feature-2-title">유저 경제</span></div>
+        <p class="editable" data-copy-key="feature-2-desc">거래, 경매, 상점 시스템으로 서버 경제를 직접 움직이는 재미를 느낄 수 있어요.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-title"><i class="fa-solid fa-shield"></i> 복구 지원</div>
-        <p>주기적인 지원 시스템으로 언제든 재도전 가능하게 설계했습니다.</p>
+        <div class="feature-title"><i class="fa-solid fa-shield"></i><span class="editable single-line" data-copy-key="feature-3-title">복구 지원</span></div>
+        <p class="editable" data-copy-key="feature-3-desc">주기적인 지원 시스템으로 언제든 재도전 가능하게 설계했습니다.</p>
       </div>
     </section>
 
     <section class="section" id="servers">
       <div class="section-head">
         <div>
-          <h2>소속 서버 목록</h2>
-          <p>네트워크에 연결된 서버를 한눈에 확인하세요.</p>
+          <h2 class="editable single-line" data-copy-key="servers-title">소속 서버 목록</h2>
+          <p class="editable" data-copy-key="servers-desc">네트워크에 연결된 서버를 한눈에 확인하세요.</p>
         </div>
         <div class="edit-toolbar admin-only">
           <button class="mini-btn" type="button" onclick="addServer()">+ 서버 추가</button>
@@ -521,8 +522,8 @@
     <section class="section" id="patch">
       <div class="section-head">
         <div>
-          <h2>패치 노트</h2>
-          <p>서버 업데이트 내역을 빠르게 공유합니다.</p>
+          <h2 class="editable single-line" data-copy-key="patch-title">패치 노트</h2>
+          <p class="editable" data-copy-key="patch-desc">서버 업데이트 내역을 빠르게 공유합니다.</p>
         </div>
         <div class="edit-toolbar admin-only">
           <button class="mini-btn" type="button" onclick="addPatch()">+ 패치 추가</button>
@@ -536,37 +537,37 @@
     <section class="section" id="team">
       <div class="section-head">
         <div>
-          <h2>운영진</h2>
-          <p>리뱅 온라인을 운영하는 핵심 팀.</p>
+          <h2 class="editable single-line" data-copy-key="team-title">운영진</h2>
+          <p class="editable" data-copy-key="team-desc">리뱅 온라인을 운영하는 핵심 팀.</p>
         </div>
       </div>
       <div class="team-grid">
         <div class="team-card">
           <div class="avatar">LB</div>
-          <strong>리뱅총괄</strong>
-          <p>Network Lead</p>
+          <strong class="editable single-line" data-copy-key="team-1-name">리뱅총괄</strong>
+          <p class="editable single-line" data-copy-key="team-1-role">Network Lead</p>
         </div>
         <div class="team-card">
           <div class="avatar">GM</div>
-          <strong>운영팀</strong>
-          <p>Community Manager</p>
+          <strong class="editable single-line" data-copy-key="team-2-name">운영팀</strong>
+          <p class="editable single-line" data-copy-key="team-2-role">Community Manager</p>
         </div>
         <div class="team-card">
           <div class="avatar">DEV</div>
-          <strong>개발팀</strong>
-          <p>Core Developer</p>
+          <strong class="editable single-line" data-copy-key="team-3-name">개발팀</strong>
+          <p class="editable single-line" data-copy-key="team-3-role">Core Developer</p>
         </div>
         <div class="team-card">
           <div class="avatar">MOD</div>
-          <strong>중재팀</strong>
-          <p>Support & Moderation</p>
+          <strong class="editable single-line" data-copy-key="team-4-name">중재팀</strong>
+          <p class="editable single-line" data-copy-key="team-4-role">Support & Moderation</p>
         </div>
       </div>
     </section>
   </main>
 
   <footer>
-    L.B ONLINE © 2026
+    <span class="editable single-line" data-copy-key="footer">L.B ONLINE © 2026</span>
   </footer>
 
   <script>
@@ -654,6 +655,7 @@
       return `${y}-${m}-${day}`;
     }
 
+    let siteCopy = {};
     let servers = [];
     let patchNotes = [];
 
@@ -661,7 +663,7 @@
     const patchContainer = document.getElementById('updateList');
     const serverStatus = document.getElementById('serverStatus');
     const patchStatus = document.getElementById('patchStatus');
-    const saveTimers = { servers: null, patch: null };
+    const saveTimers = { servers: null, patch: null, copy: null };
 
     function setStatus(el, msg, type) {
       if (!el) return;
@@ -680,6 +682,32 @@
       } catch {
         return fallback;
       }
+    }
+
+    async function fetchObject(url, fallback) {
+      try {
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) throw new Error("bad");
+        const data = await res.json();
+        if (!data || typeof data !== "object" || Array.isArray(data)) throw new Error("bad");
+        return data;
+      } catch {
+        return fallback;
+      }
+    }
+
+    function applySiteCopy() {
+      document.querySelectorAll("[data-copy-key]").forEach((el) => {
+        const key = el.dataset.copyKey;
+        if (siteCopy[key] !== undefined) {
+          el.textContent = siteCopy[key];
+        }
+      });
+    }
+
+    async function initSiteCopy() {
+      siteCopy = await fetchObject("/api/site", {});
+      applySiteCopy();
     }
 
     async function initData() {
@@ -762,12 +790,27 @@
       }
     }
 
+    async function saveSiteCopy() {
+      if (!isAdmin) return;
+      try {
+        await fetch("/api/site", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "Authorization": `Bearer ${adminKey}`
+          },
+          body: JSON.stringify(siteCopy)
+        });
+      } catch {}
+    }
+
     function scheduleSave(kind) {
       if (!isAdmin) return;
       clearTimeout(saveTimers[kind]);
       saveTimers[kind] = setTimeout(() => {
         if (kind === "servers") saveServers();
         if (kind === "patch") savePatchNotes();
+        if (kind === "copy") saveSiteCopy();
       }, 800);
     }
 
@@ -775,6 +818,12 @@
       const el = e.target;
       if (!el.classList.contains('editable')) return;
       if (!isAdmin) return;
+      const copyKey = el.dataset.copyKey;
+      if (copyKey) {
+        siteCopy[copyKey] = el.textContent.trim();
+        scheduleSave("copy");
+        return;
+      }
       const type = el.dataset.type;
       const idx = Number(el.dataset.idx);
       const field = el.dataset.field;
@@ -854,32 +903,7 @@
       setAdmin(true);
     }
 
-    const heroCta = document.getElementById("heroCta");
-    const ctaHighlight = document.getElementById("ctaHighlight");
-    if (heroCta && ctaHighlight) {
-      const moveHighlight = (btn) => {
-        const rect = btn.getBoundingClientRect();
-        const parentRect = heroCta.getBoundingClientRect();
-        ctaHighlight.style.width = `${rect.width}px`;
-        ctaHighlight.style.height = `${rect.height}px`;
-        ctaHighlight.style.transform = `translate(${rect.left - parentRect.left}px, ${rect.top - parentRect.top}px)`;
-        ctaHighlight.style.opacity = "1";
-      };
-      heroCta.querySelectorAll(".cta-btn").forEach((btn) => {
-        btn.addEventListener("mouseenter", () => moveHighlight(btn));
-        btn.addEventListener("focus", () => moveHighlight(btn));
-      });
-      heroCta.addEventListener("mouseleave", () => {
-        ctaHighlight.style.opacity = "0";
-      });
-      heroCta.addEventListener("focusout", (e) => {
-        if (!heroCta.contains(e.relatedTarget)) ctaHighlight.style.opacity = "0";
-      });
-      window.addEventListener("resize", () => {
-        ctaHighlight.style.opacity = "0";
-      });
-    }
-
+    initSiteCopy();
     initData();
     initAdminFromStorage();
   </script>
