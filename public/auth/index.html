@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>L.B ONLINE | 로그인</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap');
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@1.3.9/dist/web/pretendard.css');
+
+    :root {
+      --bg: #0b0d11;
+      --card: #131922;
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #eef2f6;
+      --muted: #a6b0be;
+      --accent: #2fd6c9;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: "Pretendard", "Apple SD Gothic Neo", sans-serif;
+      background: radial-gradient(800px 600px at 20% 10%, rgba(47, 214, 201, 0.12), transparent 60%), #0b0d11;
+      color: var(--text);
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .card {
+      width: min(520px, 92vw);
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 28px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: "Sora", sans-serif;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    .brand img {
+      width: 26px;
+      height: 26px;
+      border-radius: 8px;
+      image-rendering: pixelated;
+    }
+    .subtitle { color: var(--muted); font-size: 0.95rem; margin-bottom: 18px; }
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+    .tab {
+      flex: 1;
+      padding: 10px 0;
+      text-align: center;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      cursor: pointer;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .tab.active {
+      color: var(--text);
+      border-color: rgba(47, 214, 201, 0.4);
+      background: rgba(47, 214, 201, 0.08);
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    .field label { color: var(--muted); font-size: 0.85rem; }
+    .field input {
+      background: #0f141b;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 10px 12px;
+      color: var(--text);
+      outline: none;
+    }
+    .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    .btn.primary {
+      background: linear-gradient(135deg, #2fd6c9, #34a9ff);
+      color: #031012;
+    }
+    .btn.ghost {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text);
+    }
+    .google {
+      width: 100%;
+      justify-content: center;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .message {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+    .message.error { color: #ffb3b3; }
+    .message.success { color: #8be5d8; }
+    .profile {
+      padding: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      margin-bottom: 16px;
+      background: rgba(255, 255, 255, 0.02);
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">
+      <img src="/assets/libang-icon.png" alt="L.B 아이콘" />
+      L.B ONLINE
+    </div>
+    <div class="subtitle">계정으로 로그인하거나 새 계정을 생성하세요.</div>
+
+    <div id="profileBox" class="profile" style="display:none;"></div>
+
+    <div class="tabs">
+      <div class="tab active" id="tabLogin">로그인</div>
+      <div class="tab" id="tabSignup">회원가입</div>
+    </div>
+
+    <form id="loginForm">
+      <div class="field">
+        <label>이메일</label>
+        <input type="email" name="email" required />
+      </div>
+      <div class="field">
+        <label>비밀번호</label>
+        <input type="password" name="password" required />
+      </div>
+      <div class="actions">
+        <button class="btn primary" type="submit">로그인</button>
+        <a class="btn ghost google" href="/api/auth/google/start"><i class="fa-brands fa-google"></i> Google로 계속하기</a>
+      </div>
+      <div class="message" id="loginMsg"></div>
+    </form>
+
+    <form id="signupForm" style="display:none;">
+      <div class="field">
+        <label>이름</label>
+        <input type="text" name="name" />
+      </div>
+      <div class="field">
+        <label>이메일</label>
+        <input type="email" name="email" required />
+      </div>
+      <div class="field">
+        <label>비밀번호</label>
+        <input type="password" name="password" required />
+      </div>
+      <div class="actions">
+        <button class="btn primary" type="submit">회원가입</button>
+        <a class="btn ghost google" href="/api/auth/google/start"><i class="fa-brands fa-google"></i> Google로 계속하기</a>
+      </div>
+      <div class="message" id="signupMsg"></div>
+    </form>
+
+    <div class="actions" style="margin-top:16px;">
+      <a class="btn ghost" href="/">메인으로 돌아가기</a>
+      <button class="btn ghost" id="logoutBtn" type="button" style="display:none;">로그아웃</button>
+    </div>
+  </div>
+
+  <script>
+    const tabLogin = document.getElementById("tabLogin");
+    const tabSignup = document.getElementById("tabSignup");
+    const loginForm = document.getElementById("loginForm");
+    const signupForm = document.getElementById("signupForm");
+    const loginMsg = document.getElementById("loginMsg");
+    const signupMsg = document.getElementById("signupMsg");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const profileBox = document.getElementById("profileBox");
+
+    function showTab(tab) {
+      if (tab === "login") {
+        tabLogin.classList.add("active");
+        tabSignup.classList.remove("active");
+        loginForm.style.display = "";
+        signupForm.style.display = "none";
+      } else {
+        tabSignup.classList.add("active");
+        tabLogin.classList.remove("active");
+        signupForm.style.display = "";
+        loginForm.style.display = "none";
+      }
+      loginMsg.textContent = "";
+      signupMsg.textContent = "";
+    }
+
+    tabLogin.addEventListener("click", () => showTab("login"));
+    tabSignup.addEventListener("click", () => showTab("signup"));
+
+    async function fetchMe() {
+      try {
+        const res = await fetch("/api/auth/me", { cache: "no-store" });
+        if (!res.ok) throw new Error();
+        const me = await res.json();
+        profileBox.style.display = "block";
+        profileBox.innerHTML = `
+          <strong>${me.name || "사용자"}</strong><br/>
+          <span style="color:#a6b0be">${me.email}</span><br/>
+          <span style="color:${me.role === "admin" ? "#2fd6c9" : "#a6b0be"}">${me.role === "admin" ? "관리자 계정" : "일반 계정"}</span>
+        `;
+        logoutBtn.style.display = "inline-flex";
+        tabLogin.style.display = "none";
+        tabSignup.style.display = "none";
+        loginForm.style.display = "none";
+        signupForm.style.display = "none";
+      } catch {
+        profileBox.style.display = "none";
+        logoutBtn.style.display = "none";
+        tabLogin.style.display = "";
+        tabSignup.style.display = "";
+        showTab("login");
+      }
+    }
+
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      loginMsg.textContent = "";
+      const body = Object.fromEntries(new FormData(loginForm).entries());
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      if (res.ok) {
+        loginMsg.textContent = "로그인 성공! 메인으로 이동합니다.";
+        loginMsg.className = "message success";
+        setTimeout(() => (window.location.href = "/"), 600);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        loginMsg.textContent = data.error || "로그인 실패";
+        loginMsg.className = "message error";
+      }
+    });
+
+    signupForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      signupMsg.textContent = "";
+      const body = Object.fromEntries(new FormData(signupForm).entries());
+      const res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      if (res.ok) {
+        signupMsg.textContent = "회원가입 완료! 메인으로 이동합니다.";
+        signupMsg.className = "message success";
+        setTimeout(() => (window.location.href = "/"), 600);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        signupMsg.textContent = data.error || "회원가입 실패";
+        signupMsg.className = "message error";
+      }
+    });
+
+    logoutBtn.addEventListener("click", async () => {
+      await fetch("/api/auth/logout", { method: "POST" });
+      window.location.reload();
+    });
+
+    fetchMe();
+  </script>
+</body>
+</html>

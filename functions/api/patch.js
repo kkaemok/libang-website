@@ -1,3 +1,5 @@
+import { requireAdmin } from "../_lib/auth.js";
+
 const KEY = "patchNotes";
 const DEFAULT = [
   { date: "2026-03-09", type: "URGENT", title: "수표 돈 복사 버그 수정", desc: "수표 생성 시 발생하던 데이터 오류를 수정하고 관련 로그를 전수 조사 완료했습니다." },
@@ -13,12 +15,6 @@ function json(data, status = 200) {
   });
 }
 
-function isAuthorized(request, env) {
-  const auth = request.headers.get("Authorization") || "";
-  const match = auth.match(/^Bearer\s+(.+)$/i);
-  return Boolean(match && env.ADMIN_KEY && match[1] === env.ADMIN_KEY);
-}
-
 export async function onRequestGet({ env }) {
   const raw = await env.LB_DATA.get(KEY);
   if (raw) {
@@ -31,7 +27,8 @@ export async function onRequestGet({ env }) {
 }
 
 export async function onRequestPost({ request, env }) {
-  if (!isAuthorized(request, env)) {
+  const admin = await requireAdmin(request, env);
+  if (!admin) {
     return new Response("Unauthorized", { status: 401 });
   }
   let data;

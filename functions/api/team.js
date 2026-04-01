@@ -1,3 +1,5 @@
+import { requireAdmin } from "../_lib/auth.js";
+
 const KEY = "team";
 const DEFAULT = [
   { initials: "LB", name: "리뱅총괄", role: "Network Lead" },
@@ -13,12 +15,6 @@ function json(data, status = 200) {
   });
 }
 
-function isAuthorized(request, env) {
-  const auth = request.headers.get("Authorization") || "";
-  const match = auth.match(/^Bearer\s+(.+)$/i);
-  return Boolean(match && env.ADMIN_KEY && match[1] === env.ADMIN_KEY);
-}
-
 export async function onRequestGet({ env }) {
   const raw = await env.LB_DATA.get(KEY);
   if (raw) {
@@ -31,7 +27,8 @@ export async function onRequestGet({ env }) {
 }
 
 export async function onRequestPost({ request, env }) {
-  if (!isAuthorized(request, env)) {
+  const admin = await requireAdmin(request, env);
+  if (!admin) {
     return new Response("Unauthorized", { status: 401 });
   }
   let data;

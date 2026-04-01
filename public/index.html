@@ -442,8 +442,8 @@
           <a href="#patch"><span class="editable single-line" data-copy-key="nav-patches">Patches</span></a>
         </div>
         <div class="edit-actions admin-only">
-          <button class="mini-btn" type="button" onclick="commitEdits()">편집 완료</button>
-          <button class="mini-btn ghost" type="button" onclick="cancelEdits()">취소</button>
+          <button class="mini-btn" type="button" onclick="commitEdits()"><span class="editable single-line" data-copy-key="edit-save">편집 완료</span></button>
+          <button class="mini-btn ghost" type="button" onclick="cancelEdits()"><span class="editable single-line" data-copy-key="edit-cancel">취소</span></button>
           <span class="status" id="editStatus"></span>
         </div>
         <div class="nav-icons">
@@ -458,9 +458,9 @@
           <a class="icon-btn" href="https://discord.gg/yQsTjAJBne" target="_blank" aria-label="Discord">
             <i class="fa-brands fa-discord"></i>
           </a>
-          <button class="icon-btn" id="adminBtn" onclick="toggleAdmin()" aria-label="관리자 로그인">
-            <i class="fa-solid fa-circle-user"></i>
-          </button>
+          <a class="icon-btn" id="authLink" href="/auth" aria-label="로그인/회원가입">
+            <i class="fa-solid fa-circle-user" id="authIcon"></i>
+          </a>
           <button class="menu-btn" onclick="toggleMenu()" aria-label="메뉴 열기">
             <i class="fa-solid fa-bars"></i>
           </button>
@@ -528,8 +528,8 @@
           <p class="editable" data-copy-key="servers-desc">네트워크에 연결된 서버를 한눈에 확인하세요.</p>
         </div>
         <div class="edit-toolbar admin-only">
-          <button class="mini-btn" type="button" onclick="addServer()">+ 서버 추가</button>
-          <button class="mini-btn ghost" type="button" onclick="resetServers()">초기화</button>
+          <button class="mini-btn" type="button" onclick="addServer()"><span class="editable single-line" data-copy-key="servers-add">+ 서버 추가</span></button>
+          <button class="mini-btn ghost" type="button" onclick="resetServers()"><span class="editable single-line" data-copy-key="servers-reset">초기화</span></button>
           <span class="status" id="serverStatus"></span>
         </div>
       </div>
@@ -543,8 +543,8 @@
           <p class="editable" data-copy-key="patch-desc">서버 업데이트 내역을 빠르게 공유합니다.</p>
         </div>
         <div class="edit-toolbar admin-only">
-          <button class="mini-btn" type="button" onclick="addPatch()">+ 패치 추가</button>
-          <button class="mini-btn ghost" type="button" onclick="resetPatchNotes()">초기화</button>
+          <button class="mini-btn" type="button" onclick="addPatch()"><span class="editable single-line" data-copy-key="patch-add">+ 패치 추가</span></button>
+          <button class="mini-btn ghost" type="button" onclick="resetPatchNotes()"><span class="editable single-line" data-copy-key="patch-reset">초기화</span></button>
           <span class="status" id="patchStatus"></span>
         </div>
       </div>
@@ -558,8 +558,8 @@
           <p class="editable" data-copy-key="team-desc">리뱅 온라인을 운영하는 핵심 팀.</p>
         </div>
         <div class="edit-toolbar admin-only">
-          <button class="mini-btn" type="button" onclick="addTeam()">+ 운영진 추가</button>
-          <button class="mini-btn ghost" type="button" onclick="resetTeam()">초기화</button>
+          <button class="mini-btn" type="button" onclick="addTeam()"><span class="editable single-line" data-copy-key="team-add">+ 운영진 추가</span></button>
+          <button class="mini-btn ghost" type="button" onclick="resetTeam()"><span class="editable single-line" data-copy-key="team-reset">초기화</span></button>
           <span class="status" id="teamStatus"></span>
         </div>
       </div>
@@ -598,53 +598,36 @@
       {initials: "MOD", name: "중재팀", role: "Support & Moderation"}
     ];
 
-    const ADMIN_KEY_STORAGE = "lb_admin_key";
-    let adminKey = localStorage.getItem(ADMIN_KEY_STORAGE) || "";
     let isAdmin = false;
+    let currentUser = null;
     let snapshot = { siteCopy: {}, servers: [], patchNotes: [], team: [] };
 
     function setAdmin(state) {
       isAdmin = state;
       document.body.classList.toggle('admin-on', isAdmin);
-      const btn = document.getElementById('adminBtn');
-      if (btn) {
-        btn.classList.toggle('is-admin', isAdmin);
-        btn.setAttribute('aria-label', isAdmin ? "관리자 로그아웃" : "관리자 로그인");
-        btn.title = isAdmin ? "관리자 로그아웃" : "관리자 로그인";
+      const authLink = document.getElementById('authLink');
+      if (authLink) {
+        authLink.classList.toggle('is-admin', isAdmin);
+        authLink.setAttribute('aria-label', currentUser ? "계정" : "로그인/회원가입");
+        authLink.title = currentUser ? (isAdmin ? "관리자 계정" : "내 계정") : "로그인/회원가입";
       }
       applyEditState();
     }
 
-    async function verifyAdminKey(key) {
+    async function fetchMe() {
       try {
-        const res = await fetch("/api/auth", {
-          method: "POST",
-          headers: { "Authorization": `Bearer ${key}` }
-        });
-        return res.ok;
+        const res = await fetch("/api/auth/me", { cache: "no-store" });
+        if (!res.ok) {
+          currentUser = null;
+          setAdmin(false);
+          return;
+        }
+        currentUser = await res.json();
+        setAdmin(currentUser && currentUser.role === "admin");
       } catch {
-        return false;
-      }
-    }
-
-    async function toggleAdmin() {
-      if (isAdmin) {
-        cancelEdits(true);
-        localStorage.removeItem(ADMIN_KEY_STORAGE);
-        adminKey = "";
+        currentUser = null;
         setAdmin(false);
-        return;
       }
-      const key = prompt("관리자 키를 입력하세요");
-      if (!key) return;
-      const ok = await verifyAdminKey(key);
-      if (!ok) {
-        alert("키가 올바르지 않습니다.");
-        return;
-      }
-      adminKey = key;
-      localStorage.setItem(ADMIN_KEY_STORAGE, key);
-      setAdmin(true);
     }
 
     function escapeHtml(str) {
@@ -809,8 +792,7 @@
         const res = await fetch("/api/servers", {
           method: "POST",
           headers: {
-            "content-type": "application/json",
-            "Authorization": `Bearer ${adminKey}`
+            "content-type": "application/json"
           },
           body: JSON.stringify(servers)
         });
@@ -826,8 +808,7 @@
         const res = await fetch("/api/patch", {
           method: "POST",
           headers: {
-            "content-type": "application/json",
-            "Authorization": `Bearer ${adminKey}`
+            "content-type": "application/json"
           },
           body: JSON.stringify(patchNotes)
         });
@@ -843,8 +824,7 @@
         const res = await fetch("/api/team", {
           method: "POST",
           headers: {
-            "content-type": "application/json",
-            "Authorization": `Bearer ${adminKey}`
+            "content-type": "application/json"
           },
           body: JSON.stringify(teamMembers)
         });
@@ -860,8 +840,7 @@
         const res = await fetch("/api/site", {
           method: "POST",
           headers: {
-            "content-type": "application/json",
-            "Authorization": `Bearer ${adminKey}`
+            "content-type": "application/json"
           },
           body: JSON.stringify(siteCopy)
         });
@@ -987,26 +966,24 @@
       applyEditState();
     }
 
-    async function initAdminFromStorage() {
-      if (!adminKey) { setAdmin(false); return; }
-      const ok = await verifyAdminKey(adminKey);
-      if (!ok) {
-        localStorage.removeItem(ADMIN_KEY_STORAGE);
-        adminKey = "";
-        setAdmin(false);
-        return;
-      }
-      setAdmin(true);
-    }
-
     document.addEventListener("keydown", (e) => {
       if (e.key !== "Enter") return;
       if (!e.target.classList || !e.target.classList.contains("single-line")) return;
       e.preventDefault();
     });
 
-    initAll();
-    initAdminFromStorage();
+    document.addEventListener("click", (e) => {
+      if (!isAdmin) return;
+      const editable = e.target.closest(".editable");
+      if (!editable || editable.contentEditable !== "true") return;
+      const clickable = e.target.closest("button, a");
+      if (clickable) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    }, true);
+
+    initAll().then(fetchMe);
   </script>
 </body>
 </html>
