@@ -18,20 +18,3 @@ CREATE TABLE IF NOT EXISTS sessions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
-
-CREATE TABLE IF NOT EXISTS payment_orders (
-  id TEXT PRIMARY KEY,
-  plan_id TEXT NOT NULL,
-  order_name TEXT NOT NULL,
-  amount INTEGER NOT NULL CHECK (amount > 0),
-  customer_name TEXT,
-  customer_email TEXT,
-  status TEXT NOT NULL DEFAULT 'READY',
-  confirm_token TEXT NOT NULL UNIQUE,
-  payment_key TEXT UNIQUE,
-  method TEXT,
-  approved_at TEXT,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
-CREATE INDEX IF NOT EXISTS idx_payment_orders_created_at ON payment_orders(created_at);

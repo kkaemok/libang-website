@@ -10,6 +10,9 @@ function json(data, status = 200) {
 }
 
 export async function onRequestGet({ env }) {
+  if (!env.LB_DATA) {
+    return json({});
+  }
   const raw = await env.LB_DATA.get(KEY);
   if (raw) {
     try {
@@ -23,6 +26,9 @@ export async function onRequestGet({ env }) {
 }
 
 export async function onRequestPost({ request, env }) {
+  if (!env.LB_DATA) {
+    return json({ error: "KV binding is not configured" }, 503);
+  }
   const admin = await requireAdmin(request, env);
   if (!admin) {
     return new Response("Unauthorized", { status: 401 });
